@@ -7,6 +7,9 @@ import java.util.*;
 import com.atd.xiwei.db.*;
 import android.os.*;
 import android.view.*;
+import com.atd.xiwei.util.*;
+import okhttp3.*;
+import java.io.*;
 
 public class ChooseAreaFragment extends Fragment
 {
@@ -57,6 +60,72 @@ public class ChooseAreaFragment extends Fragment
 			}
 		}
 		});
+	}
+	/**
+	 *根据传入的地址和类型从服务器查询省市县
+	 */
+	 private void queryFromServer(String address , final String type)
+	 {
+		 showProgressDialog();
+		 HttpUtil.sendokHttpRequest(address, new okhttp3.Callback(){
+
+				 @Override
+				 public void onFailure(Call call, IOException e)
+				 {
+					 getActivity().runOnUiThread(new Runnable(){
+						 public void run()
+						 {
+							 closeProgressDialog();
+							 Toast.makeText(getContext(),"加载失败",Toast.LENGTH_SHORT).show();
+						 }
+					 });
+				 }
+
+				 @Override
+				 public void onResponse(Call call, Response response) throws IOException
+				 {
+					 String responseText = response.body().string();
+					 boolean result = false;
+					 if ("province".equals(type))
+					 {
+						 result = Utility.handleProvinceResponse(responseText);
+					 }else if ("city".equals(type))
+					 {
+						 result = Utility.handleCityResponse(responseText,selectedProvince.getId());
+					 }else if( "county".equals(type))
+					 {
+						 result = Utility.handleCountryResponse(responseText,selectedCity.getId());
+					 }
+					 if (result)
+					 {
+						 getActivity().runOnUiThread(new Runnable(){
+							 public void run()
+							 {
+								 closeProgressDialog();
+								 
+							 }
+						 });
+					 }
+				 }
+
+			 
+		 });
+	 }
+	private void showProgressDialog(){
+		if ( progressDialog == null)
+		{
+			progressDialog = new ProgressDialog(getActivity());
+			progressDialog.setMessage("正在加载...");
+			progressDialog.setCanceledOnTouchOutside(true);
+			progressDialog.show();
+		}
+	}
+	private void closeProgressDialog()
+	{
+		if (progressDialog != null)
+		{
+			progressDialog.dismiss();
+		}
 	}
 	
 	
