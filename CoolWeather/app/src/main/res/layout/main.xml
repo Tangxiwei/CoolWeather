@@ -1,11 +1,12 @@
-<LinearLayout xmlns:a="http://schemas.android.com/apk/res/android"
+<FragmentLayout xmlns:a="http://schemas.android.com/apk/res/android"
     a:layout_width="match_parent"
     a:layout_height="match_parent"
-    a:gravity="center">
+    >
 
-    <TextView
-        a:text="@string/hello_world"
-        a:layout_width="wrap_content"
-        a:layout_height="wrap_content" />
+    <fragment
+		a:name="com.atd.xiwei.ChooseAreaFragment"
+        a:id="@+id/choose_area_fragment"
+        a:layout_width="match_parent"
+        a:layout_height="match_parent" />
 
-</LinearLayout>
+</FragmentLayout>

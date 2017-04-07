@@ -10,6 +10,7 @@ import android.view.*;
 import com.atd.xiwei.util.*;
 import okhttp3.*;
 import java.io.*;
+import org.litepal.crud.*;
 
 public class ChooseAreaFragment extends Fragment
 {
@@ -61,6 +62,70 @@ public class ChooseAreaFragment extends Fragment
 		}
 		});
 	}
+	//查询省数据，从数据库，没有则从服务器查询
+	public void queryProvinces(){
+		titleText.setText("中国");
+		backButton.setVisibility(View.GONE);
+		provinceList = DataSupport.findAll(Province.class);
+		if (provinceList.size() > 0)
+		{
+			dataList.clear();
+			for (Province province : provinceList)
+			{
+				dataList.add(province.getProvinceName());
+			}
+			adapter.notifyDataSetChanged();
+			listview.setSelection(0);//
+			currentLevel = LEVEL_PROVINCE;
+		}else{
+			String address = "http://guolin.tech/api/china";
+			queryFromServer(address,"province");
+		}
+	}
+	//查询选中的省内的市
+	private void queryCities(){
+		titleText.setText(selectedProvince.getProvinceName());
+		backButton.setVisibility(View.VISIBLE);
+		cityList = DataSupport.where("province = ?",String.valueOf(selectedProvince.getId())).find(City.class);
+		//查询选中的省的市，where条件后用find
+		if (cityList.size() >0)
+		{
+		   dataList.clear();
+		   for(City city: cityList) 
+		   {
+			   dataList.add(city.getCityName());
+		   }
+		   adapter.notifyDataSetChanged();
+		   listview.setSelection(0);
+		   currentLevel = LEVEL_CITY;
+		}else{
+			int provinceCode = selectedProvince.getProvinceCode();
+			String address =  "http://guolin.tech/api/china/" + provinceCode;
+			queryFromServer(address,"city");
+		}
+	}
+	private void queryCounties(){
+		titleText.setText(selectedCity.getCityName());
+		backButton.setVisibility(View.VISIBLE);
+		countyList = DataSupport.where("cityid = ?",String.valueOf(selectedCity.getId())).find(County.class);
+		if (countyList.size() > 0)
+		{
+			dataList.clear();
+			for (County county: countyList)
+			{
+				dataList.add(county.getCountyName());
+			}
+			adapter.notifyDataSetChanged();
+			listview.setSelection(0);
+			currentLevel = LEVEL_COUNTY;
+		}else
+		{
+			int provinceCode = selectedProvince.getProvinceCode();
+			int cityCode = selectedCity.getCityCode();
+			String address = "http://guolin.tech/api/china/" + provinceCode + cityCode;
+			queryFromServer(address,"county");
+		}
+	}
 	/**
 	 *根据传入的地址和类型从服务器查询省市县
 	 */
@@ -88,7 +153,7 @@ public class ChooseAreaFragment extends Fragment
 					 boolean result = false;
 					 if ("province".equals(type))
 					 {
-						 result = Utility.handleProvinceResponse(responseText);
+						 result = Utility.handleProvinceResponse(responseText);//存入数据库
 					 }else if ("city".equals(type))
 					 {
 						 result = Utility.handleCityResponse(responseText,selectedProvince.getId());
@@ -102,7 +167,16 @@ public class ChooseAreaFragment extends Fragment
 							 public void run()
 							 {
 								 closeProgressDialog();
-								 
+								 if ("province".equals(type))
+								 {
+									 queryProvinces();//查询完后还要显示
+								 }else if("city".equals(type))
+								 {
+									 queryCities();
+								 }else if ("county".equals(type))
+								 {
+									 queryCounties();
+								 }
 							 }
 						 });
 					 }

@@ -8,6 +8,8 @@
         android:minSdkVersion="14"
         android:targetSdkVersion="21" />
 
+    <uses-permission android:name="android.permission.INTERNERT" />
+
     <application
         android:name="org.litepal.LitePalApplication"
         android:allowBackup="true"
